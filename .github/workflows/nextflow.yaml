@@ -2,35 +2,20 @@ name: Nextflow Test
 
 on:
   push:
+  pull_request:
 
 jobs:
-
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-      - name: Set up Go 1.x
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-      - name: Build
-        run: make build
-      - name: Store Funnel
-        uses: actions/upload-artifact@v4
-        with:
-          name: funnelBin
-          path: funnel
+    uses: ./.github/workflows/build.yml
 
   nextflow:
-    runs-on: ubuntu-latest
     needs: build
+    runs-on: ubuntu-latest
     steps:
     - name: Download Funnel
       uses: actions/download-artifact@v4
       with:
-        name: funnelBin
-        path: .
+        name: funnel
 
     - name: Start Funnel
       run: |
@@ -39,14 +24,12 @@ jobs:
 
     - name: Install Nextflow
       run: |
-        cd ..
-        git clone https://github.com/nextflow-io/nextflow/ -b v24.04.4 --depth 1
+        git clone https://github.com/nextflow-io/nextflow
         cd nextflow
         make compile
 
     - name: Install nf-canary and GA4GH-TES plugin
       run: |
-        cd ..
         git clone https://github.com/seqeralabs/nf-canary
         cd nf-canary
         cat <<EOF >> nextflow.config
@@ -59,5 +42,4 @@ jobs:
 
     - name: Run nf-canary tests
       run: |
-        cd ../nf-canary
-        ../nextflow/launch.sh run main.nf
+        ./nextflow/nextflow run nf-canary/main.nf

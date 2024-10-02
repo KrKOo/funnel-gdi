@@ -293,7 +293,7 @@ Slurm:
     {{printf "#SBATCH --tmp %.0fGB" .DiskGb}}
     {{- end}}
 
-    {{.Executable}} worker run --config {{.Config}} --taskID {{.TaskId}}
+    {{.Executable}} worker run --config {{.Config}} --taskID {{.TaskId}} --Server.hostname exahead1
 
 # AWSBatch describes the configuration for the AWS Batch compute backend.
 AWSBatch:

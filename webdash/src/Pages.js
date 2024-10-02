@@ -317,7 +317,6 @@ function ServiceInfo() {
         setInfo(info);
       });
   }, []);
-
   const json = (
     <ReactJson
       src={info}
