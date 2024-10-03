@@ -403,7 +403,7 @@ type HTSGETStorage struct {
 
 // Valid validates the HTSGETStorage configuration.
 func (h HTSGETStorage) Valid() bool {
-	return !h.Disabled
+	return !h.Disabled && (h.Protocol == "http" || h.Protocol == "https")
 }
 
 // Kubernetes describes the configuration for the Kubernetes compute backend.

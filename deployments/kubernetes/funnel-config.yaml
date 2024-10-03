@@ -18,22 +18,22 @@ data:
       DisableJobCleanup: false
       DisableReconciler: false
       ReconcileRate: 5m
-      Namespace: default 
-      Template: | 
+      Namespace: default
+      Template: |
         apiVersion: batch/v1
         kind: Job
         metadata:
           ## DO NOT CHANGE NAME
           name: {{.TaskId}}
           namespace: {{.Namespace}}
-        spec: 
+        spec:
           backoffLimit: 0
           completions: 1
           template:
             spec:
               serviceAccountName: funnel-sa
               restartPolicy: Never
-              containers: 
+              containers:
                 - name: funnel-worker-{{.TaskId}}
                   image: ohsucompbio/funnel-dind-rootless:latest
                   imagePullPolicy: Always
@@ -55,14 +55,14 @@ data:
                       subPath: {{.TaskId}}
                     - name: config-volume
                       mountPath: /etc/config
-        
-              volumes: 
+
+              volumes:
                 - name: config-volume
                   configMap:
                     name: funnel-config
                 - name: funnel-storage-{{.TaskId}}
                   persistentVolumeClaim:
-                    claimName: storage-pvc 
+                    claimName: storage-pvc
 
 
   funnel-worker-config.yml: |
@@ -84,11 +84,11 @@ data:
     Server:
       HostName: funnel
       RPCPort: 9090
-    
+
     Kubernetes:
       # Change to "kubernetes" to use the kubernetes executor
-      Executor: docker 
-      Namespace: default 
+      Executor: docker
+      Namespace: default
       ExecutorTemplate: |
         apiVersion: batch/v1
         kind: Job
@@ -97,13 +97,13 @@ data:
           namespace: {{.Namespace}}
           labels:
             job-name: {{.TaskId}}-{{.JobId}}
-        spec: 
+        spec:
           backoffLimit: 0
           completions: 1
           template:
             spec:
               restartPolicy: Never
-              containers: 
+              containers:
               - name: funnel-worker-{{.TaskId}}
                 image: {{.Image}}
                 imagePullPolicy: Always
@@ -119,12 +119,12 @@ data:
                 volumeMounts:
                 ### DO NOT CHANGE THIS
                 {{range $idx, $item := .Volumes}}
-                - name: storage 
+                - name: storage
                   mountPath: {{$item.ContainerPath}}
                   subPath: {{$.TaskId}}{{$item.ContainerPath}}
                 {{end}}
 
-              volumes: 
+              volumes:
               - name: storage
                 persistentVolumeClaim:
-                  claimName: storage-pvc 
+                  claimName: storage-pvc

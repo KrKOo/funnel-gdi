@@ -21,7 +21,12 @@ var Cmd = &cobra.Command{
 	Use:   "run 'CMD' [flags]",
 	Short: "Run a task.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return Run(args)
+		err := Run(args)
+		if err != nil {
+			cmd.Usage()
+			return err
+		}
+		return err
 	},
 	DisableFlagParsing: true,
 }

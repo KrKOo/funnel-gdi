@@ -20,9 +20,8 @@ func TestGet(t *testing.T) {
 	}
 
 	cmd.SetArgs([]string{"get", "--view", "MINIMAL", "1", "2"})
-	err := cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 }
@@ -39,9 +38,8 @@ func TestGetDefaultView(t *testing.T) {
 	}
 
 	cmd.SetArgs([]string{"get", "1", "2"})
-	err := cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 }
@@ -49,7 +47,7 @@ func TestGetDefaultView(t *testing.T) {
 func TestList(t *testing.T) {
 	cmd, h := newCommandHooks()
 
-	h.List = func(server, view, page, state string, tags []string, size uint32, all bool, w io.Writer) error {
+	h.List = func(server, view, page, state string, tags []string, namePrefix string, size int32, all bool, w io.Writer) error {
 		if view != "FULL" {
 			t.Errorf("expected FULL view, got '%s'", view)
 		}
@@ -57,9 +55,8 @@ func TestList(t *testing.T) {
 	}
 
 	cmd.SetArgs([]string{"list", "--view", "FULL"})
-	err := cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 }
@@ -74,7 +71,7 @@ func TestServerDefault(t *testing.T) {
 		}
 		return nil
 	}
-	h.List = func(server, view, page, state string, tags []string, size uint32, all bool, w io.Writer) error {
+	h.List = func(server, view, page, state string, tags []string, namePrefix string, size int32, all bool, w io.Writer) error {
 		if server != "http://localhost:8000" {
 			t.Errorf("expected localhost default, got '%s'", server)
 		}
@@ -100,37 +97,32 @@ func TestServerDefault(t *testing.T) {
 	}
 
 	cmd.SetArgs([]string{"create", "foo.json"})
-	err := cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"list"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"get", "1"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"cancel", "1"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"wait", "1"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 }
@@ -148,7 +140,7 @@ func TestServerEnv(t *testing.T) {
 		}
 		return nil
 	}
-	h.List = func(server, view, page, state string, tags []string, size uint32, all bool, w io.Writer) error {
+	h.List = func(server, view, page, state string, tags []string, namePrefix string, size int32, all bool, w io.Writer) error {
 		if server != "foobar" {
 			t.Error("expected foobar")
 		}
@@ -174,37 +166,32 @@ func TestServerEnv(t *testing.T) {
 	}
 
 	cmd.SetArgs([]string{"create", "foo.json"})
-	err := cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"list"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"get", "1"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"cancel", "1"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"wait", "1"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 }
@@ -222,7 +209,7 @@ func TestServerFlagOverride(t *testing.T) {
 		}
 		return nil
 	}
-	h.List = func(server, view, page, state string, tags []string, size uint32, all bool, w io.Writer) error {
+	h.List = func(server, view, page, state string, tags []string, namePrefix string, size int32, all bool, w io.Writer) error {
 		if server != "flagval" {
 			t.Error("expected flagval")
 		}
@@ -248,37 +235,32 @@ func TestServerFlagOverride(t *testing.T) {
 	}
 
 	cmd.SetArgs([]string{"create", "-S", srv, "foo.json"})
-	err := cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"list", "-S", srv})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"get", "-S", srv, "1"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"cancel", "-S", srv, "1"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 
 	cmd.SetArgs([]string{"wait", "-S", srv, "1"})
-	err = cmd.Execute()
 
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Command execution failed: %s", err)
 	}
 }

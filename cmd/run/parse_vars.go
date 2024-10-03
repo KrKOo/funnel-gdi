@@ -15,7 +15,7 @@ import (
 // ErrKeyFmt describes an error in input/output/env/tag flag formatting
 var ErrKeyFmt = errors.New("arguments passed to --in, --out, --tag and --env must be of the form: KEY=VALUE")
 
-// StorageScheme describes an error in supported storage URL schemes.
+// ErrStorageScheme describes an error in supported storage URL schemes.
 var ErrStorageScheme = errors.New("file paths must be prefixed with one of:\n file://\n gs://\n s3://")
 
 // DuplicateKeyErr returns a new error describing conflicting keys for env. vars., inputs, and outputs.
@@ -44,7 +44,7 @@ func valsToTask(vals flagVals) (task *tes.Task, err error) {
 
 	if vals.cpu > 0 || vals.ram > 0 || vals.disk > 0 || len(vals.zones) > 0 || vals.preemptible {
 		task.Resources = &tes.Resources{
-			CpuCores:    uint32(vals.cpu),
+			CpuCores:    int32(vals.cpu),
 			RamGb:       vals.ram,
 			DiskGb:      vals.disk,
 			Zones:       vals.zones,

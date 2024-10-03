@@ -5,13 +5,13 @@ metadata:
   namespace: {{.Namespace}}
   labels:
     job-name: {{.TaskId}}-{{.JobId}}
-spec: 
+spec:
   backoffLimit: 0
   completions: 1
   template:
     spec:
       restartPolicy: Never
-      containers: 
+      containers:
       - name: funnel-worker-{{.TaskId}}
         image: {{.Image}}
         imagePullPolicy: Always
@@ -27,12 +27,12 @@ spec:
         volumeMounts:
         ### DO NOT CHANGE THIS
         {{range $idx, $item := .Volumes}}
-        - name: storage 
+        - name: storage
           mountPath: {{$item.ContainerPath}}
           subPath: {{$.TaskId}}{{$item.ContainerPath}}
         {{end}}
 
-      volumes: 
+      volumes:
       - name: storage
         persistentVolumeClaim:
-          claimName: storage-pvc 
+          claimName: storage-pvc

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package scheduler;
+option go_package = "github.com/ohsu-comp-bio/funnel/compute/scheduler";
 
-option go_package = "github.com/ohsu-comp-bio/funnel/scheduler";
+package scheduler;
 
 import "google/api/annotations.proto";
 

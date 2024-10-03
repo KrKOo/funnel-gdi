@@ -100,9 +100,8 @@ func ReadPubSub(ctx context.Context, conf config.PubSub, subname string, w Write
 
 	return sub.Receive(ctx, func(ctx oldctx.Context, m *pubsub.Message) {
 		ev := &Event{}
-
-		if err := Unmarshal(m.Data, ev); err != nil {
-			fmt.Printf("Error detected while unmarshaling PubSub event message data: %s\n", err)
+		Unmarshal(m.Data, ev)
+		if err != nil {
 			return
 		}
 

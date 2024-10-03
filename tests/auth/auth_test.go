@@ -31,14 +31,14 @@ func TestBasicAuthFail(t *testing.T) {
 	// HTTP client
 	_, err := fun.HTTP.GetTask(ctx, &tes.GetTaskRequest{
 		Id:   "1",
-		View: tes.TaskView_MINIMAL,
+		View: tes.View_MINIMAL.String(),
 	})
 	if err == nil || !strings.Contains(err.Error(), "STATUS CODE - 401") {
 		t.Fatal("expected error")
 	}
 
 	_, err = fun.HTTP.ListTasks(ctx, &tes.ListTasksRequest{
-		View: tes.TaskView_MINIMAL,
+		View: tes.View_MINIMAL.String(),
 	})
 	if err == nil || !strings.Contains(err.Error(), "STATUS CODE - 401") {
 		t.Fatal("expected error")
@@ -59,28 +59,28 @@ func TestBasicAuthFail(t *testing.T) {
 	// RPC client
 	_, err = fun.RPC.GetTask(ctx, &tes.GetTaskRequest{
 		Id:   "1",
-		View: tes.TaskView_MINIMAL,
+		View: tes.View_MINIMAL.String(),
 	})
-	if err == nil || !strings.Contains(err.Error(), "Unauthenticated") {
-		t.Fatal("expected error")
+	if err == nil || !strings.Contains(err.Error(), "Basic-authentication failed") {
+		t.Fatal("expected error: " + err.Error())
 	}
 
 	_, err = fun.RPC.ListTasks(ctx, &tes.ListTasksRequest{
-		View: tes.TaskView_MINIMAL,
+		View: tes.View_MINIMAL.String(),
 	})
-	if err == nil || !strings.Contains(err.Error(), "Unauthenticated") {
+	if err == nil || !strings.Contains(err.Error(), "Basic-authentication failed") {
 		t.Fatal("expected error")
 	}
 
 	_, err = fun.RPC.CreateTask(ctx, tests.HelloWorld())
-	if err == nil || !strings.Contains(err.Error(), "Unauthenticated") {
+	if err == nil || !strings.Contains(err.Error(), "Basic-authentication failed") {
 		t.Fatal("expected error")
 	}
 
 	_, err = fun.RPC.CancelTask(ctx, &tes.CancelTaskRequest{
 		Id: "1",
 	})
-	if err == nil || !strings.Contains(err.Error(), "Unauthenticated") {
+	if err == nil || !strings.Contains(err.Error(), "Basic-authentication failed") {
 		t.Fatal("expected error")
 	}
 
@@ -111,14 +111,14 @@ func TestBasicAuthed(t *testing.T) {
 	// HTTP client
 	_, err = fun.HTTP.GetTask(context.Background(), &tes.GetTaskRequest{
 		Id:   id2,
-		View: tes.TaskView_MINIMAL,
+		View: tes.View_MINIMAL.String(),
 	})
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
 	_, err = fun.HTTP.ListTasks(context.Background(), &tes.ListTasksRequest{
-		View: tes.TaskView_MINIMAL,
+		View: tes.View_MINIMAL.String(),
 	})
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -139,14 +139,14 @@ func TestBasicAuthed(t *testing.T) {
 	// RPC client
 	_, err = fun.RPC.GetTask(context.Background(), &tes.GetTaskRequest{
 		Id:   id2,
-		View: tes.TaskView_MINIMAL,
+		View: tes.View_MINIMAL.String(),
 	})
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
 	_, err = fun.RPC.ListTasks(context.Background(), &tes.ListTasksRequest{
-		View: tes.TaskView_MINIMAL,
+		View: tes.View_MINIMAL.String(),
 	})
 	if err != nil {
 		t.Fatal("unexpected error:", err)

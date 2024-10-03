@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -40,6 +41,10 @@ func TestAmazonS3AnonymousGet(t *testing.T) {
 		endpoint: "",
 	}
 
+	// AWS S3 Public Datasets:
+	// - https://registry.opendata.aws/
+	// 1000 Genomes Public Dataset:
+	// - https://registry.opendata.aws/1000-genomes/
 	_, err = store.Get(context.Background(), "s3://1000genomes/README.analysis_history", "_test_download/README.analysis_history")
 	if err != nil {
 		t.Error("Error downloading file:", err)
@@ -47,14 +52,18 @@ func TestAmazonS3AnonymousGet(t *testing.T) {
 }
 
 func TestGoogleStorageAnonymousGet(t *testing.T) {
-	svc, err := storage.NewService(context.Background(), option.WithoutAuthentication())
+	svc, err := storage.NewService(context.TODO(), option.WithHTTPClient(&http.Client{}))
 	if err != nil {
 		t.Fatal("Error creating GS backend:", err)
 	}
 
 	store := &GoogleCloud{svc}
 
-	_, err = store.Get(context.Background(), "gs://gatk-test-data/1kgp/downsampled_gvcf_hg37/1kg-50-exome.txt", "_test_download/file.txt")
+	// Google Cloud Public Datasets:
+	// - https://cloud.google.com/datasets?hl=en
+	// Broad Institute Public Dataset:
+	// - https://console.cloud.google.com/storage/browser/gcp-public-data--broad-references;tab=objects?prefix=&forceOnObjectsSortingFiltering=false
+	_, err = store.Get(context.Background(), "gs://gcp-public-data--broad-references/C.elegans/WBcel235/README.txt", "_test_download/README.txt")
 	if err != nil {
 		t.Error("Error downloading file:", err)
 	}

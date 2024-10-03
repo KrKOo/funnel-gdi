@@ -19,8 +19,7 @@ type testNode struct {
 }
 
 func newTestNode(conf config.Config) testNode {
-	workDir, _ := os.MkdirTemp("", "funnel-test-storage-")
-	conf.Worker.WorkDir = workDir
+	conf.Worker.WorkDir, _ = os.MkdirTemp("", "funnel-test-storage-")
 	log := logger.NewLogger("test-node", logger.DebugConfig())
 
 	// A mock scheduler client allows this code to fake/control the worker's

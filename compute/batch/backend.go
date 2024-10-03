@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -45,6 +46,7 @@ type Backend struct {
 	event    events.Writer
 	database tes.ReadOnlyServer
 	log      *logger.Logger
+	events.Computer
 }
 
 // WriteEvent writes an event to the compute backend.
@@ -88,7 +90,13 @@ func (b *Backend) Submit(task *tes.Task) error {
 	if task.Resources != nil {
 		ram := int64(task.Resources.RamGb * 953.674)
 		if ram > 0 {
-			req.ContainerOverrides.SetMemory(ram)
+			req.ContainerOverrides.Memory = aws.Int64(ram)
+			req.ContainerOverrides.ResourceRequirements = []*batch.ResourceRequirement{
+				{
+					Type:  aws.String("MEMORY"),
+					Value: aws.String(strconv.FormatInt(ram, 10)),
+				},
+			}
 		}
 
 		vcpus := int64(task.Resources.CpuCores)
@@ -124,7 +132,7 @@ func (b *Backend) Submit(task *tes.Task) error {
 // Cancel removes tasks from the AWS batch job queue.
 func (b *Backend) Cancel(ctx context.Context, taskID string) error {
 	task, err := b.database.GetTask(
-		ctx, &tes.GetTaskRequest{Id: taskID, View: tes.TaskView_BASIC},
+		ctx, &tes.GetTaskRequest{Id: taskID, View: tes.View_BASIC.String()},
 	)
 	if err != nil {
 		return err
@@ -177,7 +185,7 @@ ReconcileLoop:
 			for _, s := range states {
 				for {
 					lresp, err := b.database.ListTasks(ctx, &tes.ListTasksRequest{
-						View:      tes.TaskView_BASIC,
+						View:      tes.View_BASIC.String(),
 						State:     s,
 						PageSize:  100,
 						PageToken: pageToken,

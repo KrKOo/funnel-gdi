@@ -58,7 +58,7 @@ func (b *HTSGET) Put(ctx context.Context, url, path string) (*Object, error) {
 func (b *HTSGET) Get(ctx context.Context, url, path string) (*Object, error) {
 	httpsUrl, token := htsgetUrl(url, b.conf.Protocol)
 
-	client := htsget.NewHtsgetClient(httpsUrl, token, time.Duration(b.conf.Timeout))
+	client := htsget.NewClient(httpsUrl, token, time.Duration(b.conf.Timeout))
 	err := client.DownloadTo(path)
 	if err != nil {
 		return nil, err

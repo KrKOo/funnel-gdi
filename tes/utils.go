@@ -1,6 +1,7 @@
 package tes
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -13,11 +14,8 @@ import (
 
 // Marshaler marshals tasks to indented JSON.
 var Marshaler = protojson.MarshalOptions{
-	Indent:        "  ",
-	Multiline:     false,
-	UseProtoNames: true,
+	Indent: "  ",
 }
-var Unmarshaler = protojson.UnmarshalOptions{}
 
 // MarshalToString marshals a task to an indented JSON string.
 func MarshalToString(t *Task) (string, error) {
@@ -29,11 +27,11 @@ func MarshalToString(t *Task) (string, error) {
 
 // Base64Encode encodes a task as a base64 encoded string
 func Base64Encode(t *Task) (string, error) {
-	str, err := MarshalToString(t)
+	data, err := Marshaler.Marshal(t)
 	if err != nil {
 		return "", err
 	}
-	str = base64.StdEncoding.EncodeToString([]byte(str))
+	str := base64.StdEncoding.EncodeToString(data)
 	return str, nil
 }
 
@@ -44,7 +42,8 @@ func Base64Decode(raw string) (*Task, error) {
 		return nil, fmt.Errorf("decoding task: %v", err)
 	}
 	task := &Task{}
-	err = protojson.Unmarshal(data, task)
+	buf := bytes.NewBuffer(data)
+	err = protojson.Unmarshal(buf.Bytes(), task)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling task: %v", err)
 	}
@@ -53,12 +52,13 @@ func Base64Decode(raw string) (*Task, error) {
 
 // ErrNotFound is returned when a task is not found.
 var ErrNotFound = errors.New("task not found")
+var ErrConcurrentStateChange = errors.New("Concurrent stage change")
 
 // Shorthand for task views
 const (
-	Minimal   = TaskView_MINIMAL
-	Basic     = TaskView_BASIC
-	Full      = TaskView_FULL
+	Minimal   = View_MINIMAL
+	Basic     = View_BASIC
+	Full      = View_FULL
 	File      = FileType_FILE
 	Directory = FileType_DIRECTORY
 )
@@ -165,7 +165,7 @@ func (task *Task) GetExecLog(attempt int, i int) *ExecutorLog {
 
 // GetPageSize takes in the page size from a request and returns a new page size
 // taking into account the minimum, maximum and default as documented in the TES spec.
-func GetPageSize(reqSize uint32) int {
+func GetPageSize(reqSize int32) int {
 	// default page size
 	var pageSize = 256
 

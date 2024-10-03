@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -21,8 +22,8 @@ type Authentication struct {
 var (
 	errMissingMetadata    = status.Errorf(codes.InvalidArgument, "Missing metadata in the context")
 	errTokenRequired      = status.Errorf(codes.Unauthenticated, "Basic/Bearer authorization token missing")
-	errInvalidBasicToken  = status.Errorf(codes.Unauthenticated, "Invalid Basic authorization token")
-	errInvalidBearerToken = status.Errorf(codes.Unauthenticated, "Invalid Bearer authorization token")
+	errInvalidBasicToken  = status.Errorf(codes.PermissionDenied, "Basic-authentication failed")
+	errInvalidBearerToken = status.Errorf(codes.PermissionDenied, "Bearer authorization token not accepted")
 )
 
 func NewAuthentication(creds []config.BasicCredential, oidc config.OidcAuth) *Authentication {
@@ -68,6 +69,9 @@ func (a *Authentication) Interceptor(
 		authErr = errInvalidBasicToken
 		headerValue := values[0]
 		authorized = a.basic[headerValue]
+		if !authorized {
+			fmt.Printf("Received Auth: %s (valid: %v)\n", values[0], authorized)
+		}
 	} else if a.oidc != nil {
 		if strings.HasPrefix(values[0], "Bearer ") {
 			authErr = errInvalidBearerToken

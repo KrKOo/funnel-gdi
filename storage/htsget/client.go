@@ -17,7 +17,7 @@ import (
 )
 
 // The main struct for holding the data of an HTSGET client instance
-type HtsgetClient struct {
+type Client struct {
 	Timeout       time.Duration
 	Url           string
 	authorization string
@@ -45,18 +45,18 @@ type HtsgetResponse struct {
 // Returns a new HTSGET client for fetching an HTSGET resource.
 // Optionally, a value can be provided for the Authorization header (in the
 // HTTP request). A timeout limit (per request) is also expected.
-func NewHtsgetClient(url, authorization string, timeout time.Duration) *HtsgetClient {
+func NewClient(url, authorization string, timeout time.Duration) *Client {
 	keys, err := crypt4gh.ResolveKeyPair()
 	if err != nil {
 		fmt.Println("[WARN] Minor issue while resolving Crypt4gh key-pair:", err)
 	}
-	return &HtsgetClient{timeout, url, authorization, keys}
+	return &Client{timeout, url, authorization, keys}
 }
 
 // Downloads the HTSGET resource (specified when the client was created) to the
 // specified local file path. This method ensures that the data gets copied to
 // the specified file, or it returns an error to indicate a failure.
-func (hc *HtsgetClient) DownloadTo(destFile string) error {
+func (hc *Client) DownloadTo(destFile string) error {
 	fileInfo, err := hc.fetchHtsgetFileInfo()
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func (hc *HtsgetClient) DownloadTo(destFile string) error {
 }
 
 // Performs the initial HTSGET request and returns the extracted JSON.
-func (hc *HtsgetClient) fetchHtsgetFileInfo() (*HtsgetFileInfo, error) {
+func (hc *Client) fetchHtsgetFileInfo() (*HtsgetFileInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), hc.Timeout)
 	defer cancel()
 
@@ -126,7 +126,7 @@ func (hc *HtsgetClient) fetchHtsgetFileInfo() (*HtsgetFileInfo, error) {
 
 // Decrypts (Crypt4gh) the temporaray file to the final file path.
 // Does not remove the temporary file.
-func (hc *HtsgetClient) decryptFile(tempFile, destFile string) error {
+func (hc *Client) decryptFile(tempFile, destFile string) error {
 	defer os.Remove(tempFile)
 
 	tempStream, err := os.Open(tempFile)

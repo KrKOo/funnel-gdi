@@ -57,12 +57,15 @@ func (dcmd DockerCommand) Run(ctx context.Context) error {
 	}
 
 	args = append(args, dcmd.Image)
+	// if dcmd.Command contains the ["/bin/bash", "-ue"] string, replace it with "/bin/bash -ue"
+	c := strings.Join(dcmd.ShellCommand, " ")
+	if strings.Contains(c, "[/bin/bash, -ue]") {
+		dcmd.ShellCommand = transformCommandSlice(dcmd.ShellCommand)
+	}
 	args = append(args, dcmd.ShellCommand...)
 
 	// Roughly: `docker run --rm -i --read-only -w [workdir] -v [bindings] [imageName] [cmd]`
-
 	cmdStr := strings.Join(args, " ")
-
 	dcmd.Event.Info("Running command", "cmd", cmdStr)
 	cmd := exec.Command(args[0], args[1:]...)
 
@@ -101,6 +104,15 @@ func formatVolumeArg(v Volume) string {
 		mode = "ro"
 	}
 	return fmt.Sprintf("%s:%s:%s", v.HostPath, v.ContainerPath, mode)
+}
+
+func transformCommandSlice(cmd []string) []string {
+	if len(cmd) == 0 {
+		return cmd // Handle empty slice
+	}
+
+	cmd[2] = "/bin/bash -ue .command.run &> .command.log"
+	return cmd
 }
 
 type metadata struct {

@@ -1,11 +1,10 @@
 package task
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-
-	"encoding/json"
 
 	"github.com/ohsu-comp-bio/funnel/tes"
 	"golang.org/x/net/context"

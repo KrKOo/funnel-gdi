@@ -24,11 +24,8 @@ func Cancel(server string, ids []string, writer io.Writer) error {
 			return err
 		}
 		// CancelTaskResponse is an empty struct
-		out, err := cli.Marshaler.Marshal(resp)
-		if err != nil {
-			return err
-		}
-		res = append(res, string(out))
+		out := cli.Marshaler.Format(resp)
+		res = append(res, out)
 	}
 
 	for _, x := range res {

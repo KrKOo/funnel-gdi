@@ -66,7 +66,7 @@ type NodeProcess struct {
 
 // Run runs a node with the given config. This is responsible for communication
 // with the server and starting task workers
-func (n *NodeProcess) Run(ctx context.Context) {
+func (n *NodeProcess) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -103,7 +103,8 @@ func (n *NodeProcess) Run(ctx context.Context) {
 				fmt.Printf("Detected error while waiting for works to finish "+
 					"within 10 seconds: %s\n", err)
 			}
-			return
+
+			return nil
 
 		case <-ticker.C:
 			n.sync(ctx)

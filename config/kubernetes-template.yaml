@@ -4,14 +4,14 @@ metadata:
   ## DO NOT CHANGE NAME
   name: {{.TaskId}}
   namespace: {{.Namespace}}
-spec: 
+spec:
   backoffLimit: 0
   completions: 1
   template:
     spec:
       serviceAccountName: funnel-sa
       restartPolicy: Never
-      containers: 
+      containers:
         - name: funnel-worker-{{.TaskId}}
           image: ohsucompbio/funnel-dind-rootless:latest
           imagePullPolicy: Always
@@ -34,10 +34,10 @@ spec:
             - name: config-volume
               mountPath: /etc/config
 
-      volumes: 
+      volumes:
         - name: config-volume
           configMap:
             name: funnel-config
         - name: funnel-storage-{{.TaskId}}
           persistentVolumeClaim:
-            claimName: storage-pvc 
+            claimName: storage-pvc

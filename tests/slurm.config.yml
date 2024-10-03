@@ -18,4 +18,3 @@ Slurm:
     {{- end}}
 
     funnel worker run --config /opt/funnel_config.yml --taskID {{.TaskId}}
-

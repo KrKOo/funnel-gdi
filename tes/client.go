@@ -69,7 +69,7 @@ func (c *Client) setAuth(hreq *http.Request) {
 // GetTask returns the raw bytes from GET /v1/tasks/{id}
 func (c *Client) GetTask(ctx context.Context, req *GetTaskRequest) (*Task, error) {
 	// Send request
-	u := c.address + "/v1/tasks/" + req.Id + "?view=" + req.View.String()
+	u := c.address + "/v1/tasks/" + req.Id + "?view=" + req.View
 	hreq, _ := http.NewRequestWithContext(ctx, "GET", u, nil)
 	c.setAuth(hreq)
 	body, err := util.CheckHTTPResponse(c.client.Do(hreq))
@@ -78,7 +78,7 @@ func (c *Client) GetTask(ctx context.Context, req *GetTaskRequest) (*Task, error
 	}
 	// Parse response
 	resp := &Task{}
-	err = Unmarshaler.Unmarshal(body, resp)
+	err = protojson.Unmarshal(body, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -89,16 +89,18 @@ func (c *Client) GetTask(ctx context.Context, req *GetTaskRequest) (*Task, error
 func (c *Client) ListTasks(ctx context.Context, req *ListTasksRequest) (*ListTasksResponse, error) {
 	// Build url query parameters
 	v := url.Values{}
-	addUInt32(v, "page_size", req.GetPageSize())
+	addInt32(v, "page_size", req.GetPageSize())
 	addString(v, "page_token", req.GetPageToken())
-	addString(v, "view", req.GetView().String())
+	addString(v, "view", req.GetView())
+	addString(v, "name_prefix", req.GetNamePrefix())
 
 	if req.GetState() != Unknown {
 		addString(v, "state", req.State.String())
 	}
 
-	for key, val := range req.Tags {
-		v.Add(fmt.Sprintf("tags[%s]", key), val)
+	for key, val := range req.GetTags() {
+		v.Add("tag_key", key)
+		v.Add("tag_value", val)
 	}
 
 	// Send request
@@ -111,7 +113,7 @@ func (c *Client) ListTasks(ctx context.Context, req *ListTasksRequest) (*ListTas
 	}
 	// Parse response
 	resp := &ListTasksResponse{}
-	err = Unmarshaler.Unmarshal(body, resp)
+	err = protojson.Unmarshal(body, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +144,7 @@ func (c *Client) CreateTask(ctx context.Context, task *Task) (*CreateTaskRespons
 
 	// Parse response
 	resp := &CreateTaskResponse{}
-	err = Unmarshaler.Unmarshal(body, resp)
+	err = protojson.Unmarshal(body, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -162,16 +164,16 @@ func (c *Client) CancelTask(ctx context.Context, req *CancelTaskRequest) (*Cance
 
 	// Parse response
 	resp := &CancelTaskResponse{}
-	err = Unmarshaler.Unmarshal(body, resp)
+	err = protojson.Unmarshal(body, resp)
 	if err != nil {
 		return nil, err
 	}
 	return resp, nil
 }
 
-// GetServiceInfo returns result of GET /v1/tasks/service-info
-func (c *Client) GetServiceInfo(ctx context.Context, req *ServiceInfoRequest) (*ServiceInfo, error) {
-	u := c.address + "/v1/tasks/service-info"
+// GetServiceInfo returns result of GET /v1/service-info
+func (c *Client) GetServiceInfo(ctx context.Context, req *GetServiceInfoRequest) (*ServiceInfo, error) {
+	u := c.address + "/v1/service-info"
 	hreq, _ := http.NewRequestWithContext(ctx, "GET", u, nil)
 	c.setAuth(hreq)
 	body, err := util.CheckHTTPResponse(c.client.Do(hreq))
@@ -181,7 +183,7 @@ func (c *Client) GetServiceInfo(ctx context.Context, req *ServiceInfoRequest) (*
 
 	// Parse response
 	resp := &ServiceInfo{}
-	err = Unmarshaler.Unmarshal(body, resp)
+	err = protojson.Unmarshal(body, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +198,7 @@ func (c *Client) WaitForTask(ctx context.Context, taskIDs ...string) error {
 		for _, id := range taskIDs {
 			r, err := c.GetTask(ctx, &GetTaskRequest{
 				Id:   id,
-				View: TaskView_MINIMAL,
+				View: View_MINIMAL.String(),
 			})
 			if err != nil {
 				return err

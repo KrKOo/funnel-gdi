@@ -3,6 +3,7 @@ package dynamodb
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -311,6 +312,71 @@ func (db *DynamoDB) createTaskInputContent(ctx context.Context, task *tes.Task) 
 			}
 		}
 	}
+	return nil
+}
+
+func (db *DynamoDB) deleteTask(ctx context.Context, id string) error {
+	var item *dynamodb.DeleteItemInput
+	var err error
+
+	item = &dynamodb.DeleteItemInput{
+		TableName: aws.String(db.taskTable),
+		Key: map[string]*dynamodb.AttributeValue{
+			db.partitionKey: {
+				S: aws.String(db.partitionValue),
+			},
+			"id": {
+				S: aws.String(id),
+			},
+		},
+	}
+	_, err = db.client.DeleteItemWithContext(ctx, item)
+	if err != nil {
+		return err
+	}
+
+	query := &dynamodb.QueryInput{
+		TableName:              aws.String(db.contentTable),
+		Limit:                  aws.Int64(10),
+		ScanIndexForward:       aws.Bool(false),
+		ConsistentRead:         aws.Bool(true),
+		KeyConditionExpression: aws.String("id = :v1"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":v1": {
+				S: aws.String(id),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#index": aws.String("index"),
+		},
+		ProjectionExpression: aws.String("id, #index"),
+	}
+
+	err = db.client.QueryPagesWithContext(
+		ctx,
+		query,
+		func(page *dynamodb.QueryOutput, lastPage bool) bool {
+			for _, res := range page.Items {
+				item = &dynamodb.DeleteItemInput{
+					TableName: aws.String(db.contentTable),
+					Key: map[string]*dynamodb.AttributeValue{
+						"id":    res["id"],
+						"index": res["index"],
+					},
+				}
+				// TODO handle error without panic
+				_, err := db.client.DeleteItem(item)
+				if err != nil {
+					log.Fatalf("failed to delete content item: %v", err)
+				}
+			}
+			return page.LastEvaluatedKey != nil
+		})
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

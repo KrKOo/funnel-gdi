@@ -39,10 +39,10 @@ func TestGetTask(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/tasks/test-id", func(w http.ResponseWriter, r *http.Request) {
 		ta := Task{Id: "test-id"}
-		if b, err := Marshaler.Marshal(&ta); err != nil {
-			t.Error(err)
-		} else if _, err2 := w.Write(b); err2 != nil {
-			t.Error("Failed to write response", err2)
+		o, _ := Marshaler.Marshal(&ta)
+		_, err = w.Write(o)
+		if err != nil {
+			t.Fatal(err)
 		}
 	})
 
@@ -56,7 +56,7 @@ func TestGetTask(t *testing.T) {
 	}
 	body, err := c.GetTask(context.Background(), &GetTaskRequest{
 		Id:   "test-id",
-		View: TaskView_MINIMAL,
+		View: View_MINIMAL.String(),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -74,10 +74,10 @@ func TestGetTaskTrailingSlash(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/tasks/test-id", func(w http.ResponseWriter, r *http.Request) {
 		ta := Task{Id: "test-id"}
-		if b, err := Marshaler.Marshal(&ta); err != nil {
-			t.Error(err)
-		} else if _, err2 := w.Write(b); err2 != nil {
-			t.Error("Failed to write response", err2)
+		o, _ := Marshaler.Marshal(&ta)
+		_, err = w.Write(o)
+		if err != nil {
+			t.Fatal(err)
 		}
 	})
 
@@ -91,7 +91,7 @@ func TestGetTaskTrailingSlash(t *testing.T) {
 	}
 	body, err := c.GetTask(context.Background(), &GetTaskRequest{
 		Id:   "test-id",
-		View: TaskView_MINIMAL,
+		View: View_MINIMAL.String(),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -121,7 +121,7 @@ func TestClientTimeout(t *testing.T) {
 
 	_, err = c.GetTask(context.Background(), &GetTaskRequest{
 		Id:   "test-id",
-		View: TaskView_MINIMAL,
+		View: View_MINIMAL.String(),
 	})
 	close(ch)
 	if err == nil {

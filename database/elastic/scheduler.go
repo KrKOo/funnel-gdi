@@ -53,7 +53,7 @@ func (es *Elastic) GetNode(ctx context.Context, req *scheduler.GetNodeRequest) (
 		Do(ctx)
 
 	if elastic.IsNotFound(err) {
-		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("%v: nodeID: %s", err.Error(), req.Id))
+		return nil, status.Errorf(codes.NotFound, "%v: nodeID: %s", err.Error(), req.Id)
 	}
 	if err != nil {
 		return nil, err

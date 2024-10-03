@@ -78,7 +78,7 @@ func TempConfigFile(c config.Config, name string) (path string, cleanup func()) 
 	return p, cleanup
 }
 
-// RandomString generates a random string of length 20.
+// Generates a random string of length 20.
 func randomCredential() string {
 	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
 	b := make([]rune, 20)
