@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"text/template"
 	"time"
 
@@ -43,13 +44,17 @@ func (kcmd KubernetesCommand) Run(ctx context.Context) error {
 		command = append(command, "<", kcmd.StdinFile)
 	}
 
+	joinedCommand := strings.Join(command, " ")
+	escapedCommand := strings.ReplaceAll(joinedCommand, `"`, `\"`)
+
 	var buf bytes.Buffer
 	err = tpl.Execute(&buf, map[string]interface{}{
 		"TaskId":    taskId,
 		"JobId":     kcmd.JobId,
 		"Namespace": kcmd.Namespace,
 		"Image":     kcmd.Image,
-		"Command":   command,
+		"Command":   escapedCommand,
+		"Env":       kcmd.Env,
 		"Workdir":   kcmd.Workdir,
 		"Volumes":   kcmd.Volumes,
 		"Cpus":      kcmd.Resources.CpuCores,

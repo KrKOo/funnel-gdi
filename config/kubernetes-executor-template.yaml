@@ -16,8 +16,17 @@ spec:
         image: {{.Image}}
         imagePullPolicy: Always
         command: ["/bin/sh", "-c"]
-        args: {{.Command}}
+        args: 
+          - "{{.Command}}"
         workingDir: {{.Workdir}}
+        {{if len .Env}}
+        env:
+        {{range $key, $value := .Env}}
+        - name: {{$key}}
+          value: {{$value}}
+        {{end}}
+        {{end}}
+
         resources:
           requests:
             cpu: {{if ne .Cpus 0 -}}{{.Cpus}}{{ else }}{{"100m"}}{{end}}
