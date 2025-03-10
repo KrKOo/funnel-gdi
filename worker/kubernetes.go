@@ -13,9 +13,9 @@ import (
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	batchv1 "k8s.io/client-go/kubernetes/typed/batch/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -97,10 +97,13 @@ func (kcmd KubernetesCommand) Run(ctx context.Context) error {
 
 	go kcmd.streamLogs()
 
-	err = waitForJobFinish(ctx, client, metav1.ListOptions{LabelSelector: fmt.Sprintf("job-name=%s-%d", taskId, kcmd.JobId)})
+	watcher, err := client.Watch(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("job-name=%s-%d", taskId, kcmd.JobId)})
 	if err != nil {
-		return fmt.Errorf("error while waiting for job to finish: %v", err)
+		return fmt.Errorf("error while watching job: %v", err)
 	}
+	defer watcher.Stop()
+
+	waitForJobFinish(ctx, watcher)
 
 	return nil
 }
@@ -127,25 +130,13 @@ func (kcmd KubernetesCommand) streamLogs() {
 		return
 	}
 
-	for {
-		buf := make([]byte, 512)
-		numBytes, err := stream.Read(buf)
-		if err != nil {
-			if err == io.EOF {
-				fmt.Printf("Pod log stream closed.\n")
-				return
-			}
+	defer stream.Close()
 
-			fmt.Printf("Error while reading logs for pod: %v\n", err)
-			return
-		}
+	_, err = io.Copy(kcmd.Stdout, stream)
 
-		_, err = kcmd.Stdout.Write(buf[:numBytes])
-
-		if err != nil {
-			fmt.Printf("Error while writing logs: %v\n", err)
-			return
-		}
+	if err != nil {
+		fmt.Println("Error while streaming logs: ", err)
+		return
 	}
 }
 
@@ -197,30 +188,20 @@ func waitForJobPodStart(ctx context.Context, namespace string, jobName string) e
 }
 
 // Waits until the job finishes
-func waitForJobFinish(ctx context.Context, client batchv1.JobInterface, listOptions metav1.ListOptions) error {
-	ticker := time.NewTicker(10 * time.Second)
-
+func waitForJobFinish(ctx context.Context, watcher watch.Interface) {
 	for {
 		select {
-		case <-ctx.Done():
-			return nil
-		case <-ticker.C:
-			jobs, err := client.List(ctx, listOptions)
+		case event := <-watcher.ResultChan():
+			job := event.Object.(*v1.Job)
 
-			if err != nil {
-				return err
-			}
-
-			if len(jobs.Items) == 0 {
-				// Should not happen
-				return fmt.Errorf("job not found")
-			}
-
-			// There should be always only one job
-			job := jobs.Items[0]
 			if job.Status.Succeeded > 0 || job.Status.Failed > 0 {
-				return nil
+				return
+			} else if event.Type == watch.Deleted {
+				return
 			}
+
+		case <-ctx.Done():
+			return
 		}
 	}
 }
